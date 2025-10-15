@@ -27,11 +27,11 @@ describe('Health API Endpoint', () => {
     expect(data.status).toBe('ok');
   });
 
-  it('returns version as "0.1.1"', async () => {
+  it('returns version as "0.1.2"', async () => {
     const response = await GET();
     const data = await response.json();
 
-    expect(data.version).toBe('0.1.1');
+    expect(data.version).toBe('0.1.2');
   });
 
   it('returns timestamp in ISO8601 format', async () => {
