@@ -172,9 +172,53 @@ Railway will automatically:
 - Build the project with `pnpm build`
 - Start the server with `pnpm start`
 
+### Multi-Environment Setup
+
+This project uses separate Railway environments for staging and production:
+
+#### Setting Up Environments
+
+1. **In Railway Dashboard**, create two services from the same GitHub repo:
+   - **JIVE-Production**: Deploys from `main` branch
+   - **JIVE-Staging**: Deploys from `staging` branch
+
+2. **Configure each service**:
+   - Go to service Settings → Deploy
+   - Set "Branch" to respective branch (`main` or `staging`)
+   - Railway will auto-deploy on push to configured branch
+
+3. **Environment Variables**:
+   - Configure production secrets in JIVE-Production service
+   - Configure staging secrets in JIVE-Staging service
+   - Use different database/Redis instances per environment
+
+4. **Access URLs**:
+   - Production: `https://jive-production.up.railway.app`
+   - Staging: `https://jive-staging.up.railway.app`
+
 ### Health Checks
 
-Health check endpoints will be added in Story 1.2.
+The API includes a health check endpoint at `/api/health`:
+
+```bash
+curl https://your-domain.railway.app/api/health
+```
+
+Response:
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "timestamp": "2025-10-15T14:30:00.000Z"
+}
+```
+
+Use this endpoint for:
+
+- Railway health check configuration
+- Monitoring and alerting
+- Deployment verification
 
 ## Architecture
 
@@ -182,11 +226,45 @@ For detailed technical architecture, see [docs/architecture.md](docs/architectur
 
 ## Development Workflow
 
-1. Create a feature branch from `main`
-2. Make your changes
-3. Run `pnpm lint` and `pnpm format` before committing
-4. Pre-commit hooks will automatically lint and format staged files
-5. Create a pull request for review
+This project uses a three-tier deployment strategy: **Development → Staging → Production**
+
+### Branch Structure
+
+- `main` - Production branch (auto-deploys to Railway Production)
+- `staging` - Staging branch (auto-deploys to Railway Staging)
+- `feature/*` - Feature branches for development
+
+### Workflow Process
+
+1. **Create a feature branch** from `staging`:
+
+   ```bash
+   git checkout staging
+   git pull origin staging
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Develop and test locally**:
+   - Make your changes
+   - Run `pnpm lint` and `pnpm format` before committing
+   - Pre-commit hooks will automatically lint and format staged files
+   - Ensure all tests pass with `pnpm test`
+
+3. **Create PR to staging**:
+   - Push your feature branch
+   - Create a pull request targeting `staging` branch
+   - Wait for CI checks to pass
+   - Get code review approval
+
+4. **Test in staging environment**:
+   - Once merged to `staging`, changes auto-deploy to Railway Staging
+   - Verify functionality at staging URL
+   - Perform integration testing
+
+5. **Promote to production**:
+   - Create a PR from `staging` to `main`
+   - Final review and approval
+   - Merge to `main` triggers auto-deploy to Railway Production
 
 ## Git Hooks
 
