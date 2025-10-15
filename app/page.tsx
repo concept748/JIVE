@@ -15,6 +15,10 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-center sm:text-left bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Hi Chris! 👋
         </h1>
+        <p className="text-lg text-muted-foreground text-center sm:text-left">
+          Welcome to the JIVE Dashboard - your real-time multi-agent development
+          monitoring platform.
+        </p>
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{' '}
