@@ -15,7 +15,7 @@ describe('Home Page', () => {
       ok: true,
       json: async () => ({
         status: 'ok',
-        version: '1.0.0',
+        version: '0.1.0',
         timestamp: '2025-10-15T14:30:00.000Z',
       }),
     });
@@ -29,7 +29,7 @@ describe('Home Page', () => {
       ok: true,
       json: async () => ({
         status: 'ok',
-        version: '1.0.0',
+        version: '0.1.0',
         timestamp: '2025-10-15T14:30:00.000Z',
       }),
     });
@@ -55,7 +55,7 @@ describe('Home Page', () => {
       ok: true,
       json: async () => ({
         status: 'ok',
-        version: '1.0.0',
+        version: '0.1.0',
         timestamp: '2025-10-15T14:30:00.000Z',
       }),
     });
@@ -64,7 +64,7 @@ describe('Home Page', () => {
 
     await waitFor(() => {
       expect(screen.getByText('OK')).toBeInTheDocument();
-      expect(screen.getByText('1.0.0')).toBeInTheDocument();
+      expect(screen.getByText('0.1.0')).toBeInTheDocument();
     });
   });
 
@@ -86,7 +86,7 @@ describe('Home Page', () => {
       ok: true,
       json: async () => ({
         status: 'ok',
-        version: '1.0.0',
+        version: '0.1.0',
         timestamp: '2025-10-15T14:30:00.000Z',
       }),
     });

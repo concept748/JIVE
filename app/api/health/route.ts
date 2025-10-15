@@ -4,7 +4,7 @@ import type { HealthResponse } from '@/types/health';
 export async function GET() {
   const response: HealthResponse = {
     status: 'ok',
-    version: '1.0.0',
+    version: '0.1.0',
     timestamp: new Date().toISOString(),
   };
 
