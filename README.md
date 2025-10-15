@@ -185,7 +185,8 @@ This project uses separate Railway environments for staging and production:
 2. **Configure each service**:
    - Go to service Settings → Deploy
    - Set "Branch" to respective branch (`main` or `staging`)
-   - Railway will auto-deploy on push to configured branch
+   - **JIVE-Staging**: Enable auto-deploy ✅ (instant testing)
+   - **JIVE-Production**: Disable auto-deploy ❌ (manual control)
 
 3. **Environment Variables**:
    - Configure production secrets in JIVE-Production service
@@ -230,7 +231,7 @@ This project uses a three-tier deployment strategy: **Development → Staging �
 
 ### Branch Structure
 
-- `main` - Production branch (auto-deploys to Railway Production)
+- `main` - Production branch (manual deploy to Railway Production)
 - `staging` - Staging branch (auto-deploys to Railway Staging)
 - `feature/*` - Feature branches for development
 
@@ -264,7 +265,9 @@ This project uses a three-tier deployment strategy: **Development → Staging �
 5. **Promote to production**:
    - Create a PR from `staging` to `main`
    - Final review and approval
-   - Merge to `main` triggers auto-deploy to Railway Production
+   - Merge to `main`
+   - **Manually deploy**: Railway Dashboard → JIVE-Production → Deployments → "Deploy Now"
+   - Verify production deployment
 
 ## Git Hooks
 
