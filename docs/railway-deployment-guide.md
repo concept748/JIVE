@@ -12,31 +12,42 @@ JIVE uses a three-tier deployment strategy:
 
 ## Recommended Deployment Strategy
 
-**Auto-Staging, Manual Production** - The safest and most efficient approach:
+**GitHub Actions Test-Gated Deployments** - The safest and most reliable approach:
 
-- **JIVE-Staging**: Auto-deploy **ENABLED** ✅
-  - Instant feedback when you merge to staging
-  - Test immediately without manual intervention
-  - Fast iteration cycle
+- **JIVE-Staging**: Auto-deploy **DISABLED** ❌
+  - Deployments triggered by GitHub Actions
+  - All tests must pass before deployment
+  - Automatic deployment on test success
+  - Full CI/CD visibility
 
 - **JIVE-Production**: Auto-deploy **DISABLED** ❌
+  - Manual deployment control
   - Deploy only when YOU decide
   - Control production release timing
-  - Prevents accidental deployments
   - Manual "Deploy Now" button in Railway dashboard
 
 **Why This Works:**
 
-1. Merge to staging → Instantly deployed → Test immediately
-2. When satisfied → Merge staging to main
-3. Go to Railway Production → Click "Deploy Now" when ready
-4. Production updates on YOUR schedule
+1. Push to staging → GitHub Actions runs tests
+2. All tests pass → Automatically deploys to Railway staging
+3. Test in staging environment
+4. When satisfied → Merge staging to main
+5. Go to Railway Production → Click "Deploy Now" when ready
+6. Production updates on YOUR schedule
+
+**Benefits:**
+
+- ✅ No deployments with failing tests
+- ✅ Full test visibility in GitHub
+- ✅ Consistent CI/CD pipeline
+- ✅ Better deployment audit trail
 
 ## Prerequisites
 
 - Railway account ([railway.app](https://railway.app/))
 - GitHub repository connected to Railway
 - Admin access to Railway project
+- Railway CLI token for GitHub Actions deployment
 
 ## Step 1: Create Railway Project
 
@@ -96,10 +107,11 @@ GITHUB_OAUTH_CLIENT_SECRET=[production-oauth-client-secret]
 1. Go to **Settings** tab
 2. Under **Deploy** section:
    - Set **Source Branch** to `staging`
-   - Enable **Auto-Deploy** on push
+   - **DISABLE Auto-Deploy** ❌ (deployments will be triggered by GitHub Actions)
 3. Under **Domains** section:
    - Click "Generate Domain"
    - Note the URL (e.g., `jive-staging.up.railway.app`)
+4. Note the **Service ID** from the URL or settings (needed for GitHub Actions)
 
 ### Staging Environment Variables
 
@@ -146,7 +158,58 @@ If using Railway-managed databases:
 
 Repeat for Redis if needed.
 
-## Step 5: Configure Health Checks
+## Step 5: Configure GitHub Actions for Test-Gated Deployments
+
+### 5.1: Generate Railway Token
+
+1. Go to [Railway Account Settings](https://railway.app/account/tokens)
+2. Click "Create Token"
+3. Name it "GitHub Actions Deploy"
+4. Copy the token (you won't see it again)
+
+### 5.2: Add GitHub Repository Secret
+
+1. Go to your GitHub repository
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click "New repository secret"
+4. Name: `RAILWAY_TOKEN`
+5. Value: Paste the Railway token
+6. Click "Add secret"
+
+### 5.3: Verify GitHub Actions Workflow
+
+The `.github/workflows/deploy-staging.yml` workflow is configured to:
+
+1. **Run on push to staging branch**
+2. **Execute all tests:**
+   - Type checking (`pnpm type-check`)
+   - Linting (`pnpm lint`)
+   - Unit tests (`pnpm test`)
+   - Build verification (`pnpm build`)
+3. **Deploy only if all tests pass**
+4. **Use Railway CLI** to deploy to the `jive-staging` service
+
+**Workflow file location:** `.github/workflows/deploy-staging.yml`
+
+**Key features:**
+
+- ✅ Test-gated: Deployment only proceeds if all tests pass
+- ✅ Automatic: Triggered on push to staging branch
+- ✅ Visible: Full test results in GitHub Actions tab
+- ✅ Auditable: Complete deployment history in GitHub
+
+### 5.4: Verify Service Name
+
+Ensure the Railway service name in the workflow matches your actual service name:
+
+```yaml
+# In .github/workflows/deploy-staging.yml
+run: railway up --service jive-staging
+```
+
+If your service has a different name, update the workflow file.
+
+## Step 6: Configure Health Checks
 
 For both services:
 
@@ -156,34 +219,44 @@ For both services:
 4. Set **Health Check Timeout** to 10 seconds
 5. Set **Health Check Interval** to 30 seconds
 
-## Step 6: Configure Deployment Settings
+## Step 7: Configure Deployment Settings
 
 For both services, under **Settings** → **Deploy**:
 
 1. **Build Command**: `pnpm build` (auto-detected)
 2. **Start Command**: `pnpm start` (auto-detected)
 3. **Watch Paths**: Leave default or customize
-4. **Auto-Deploy**: Enabled
+4. **Auto-Deploy**: **DISABLED** ❌ (for staging, GitHub Actions handles deployment)
 5. **Restart Policy**: ON_FAILURE with 3 max retries
 
 ## Deployment Workflow
 
-### Deploying to Staging
+### Deploying to Staging (Test-Gated via GitHub Actions)
 
-1. Merge feature branch PR to `staging`:
+1. Create and push feature branch:
 
    ```bash
-   # Feature branch
+   # Create feature branch from staging
    git checkout -b feature/my-feature staging
-   # ... make changes ...
+   # Make changes
+   git add .
+   git commit -m "Add new feature"
    git push origin feature/my-feature
-   # Create PR to staging branch
    ```
 
-2. Once PR is merged, Railway auto-deploys to staging
-3. Monitor deployment in Railway dashboard
-4. Test at staging URL: `https://jive-staging.up.railway.app`
-5. Verify health check: `https://jive-staging.up.railway.app/api/health`
+2. Create PR to `staging` branch on GitHub
+3. Review changes and merge PR
+4. **GitHub Actions automatically:**
+   - Runs all tests (type-check, lint, test, build)
+   - If tests pass → Deploys to Railway staging
+   - If tests fail → Deployment blocked, check GitHub Actions tab
+5. Monitor deployment:
+   - **GitHub Actions**: View test results and deployment logs
+   - **Railway Dashboard**: View deployment status and application logs
+6. Test at staging URL: `https://jive-staging.up.railway.app`
+7. Verify health check: `https://jive-staging.up.railway.app/api/health`
+
+**Workflow visibility:** `https://github.com/[your-org]/[repo]/actions`
 
 ### Promoting to Production
 
@@ -216,12 +289,18 @@ For both services, under **Settings** → **Deploy**:
 
 ### GitHub Actions
 
-CI runs on both `staging` and `main` branches:
+**CI Workflow** (`.github/workflows/ci.yml`) runs on all branches:
 
 - Linting and formatting
 - Type checking
 - Unit tests
 - Build verification
+
+**Deploy Workflow** (`.github/workflows/deploy-staging.yml`) runs on staging branch:
+
+- All CI checks above
+- Automatic Railway deployment if tests pass
+- Full deployment logs and history
 
 ### Health Check Monitoring
 
@@ -264,12 +343,34 @@ If production deployment fails:
 
 ## Troubleshooting
 
-### Deployment Fails
+### GitHub Actions Deployment Fails
+
+1. **Check GitHub Actions logs:**
+   - Go to repository → Actions tab
+   - Click on failed workflow run
+   - Review test output and deployment logs
+
+2. **Common issues:**
+   - **Tests failing**: Fix failing tests before deployment
+   - **Railway token invalid**: Verify `RAILWAY_TOKEN` secret in GitHub
+   - **Service name mismatch**: Check workflow uses correct service name
+   - **Railway CLI error**: Verify Railway service exists and is accessible
+
+3. **Verify locally:**
+   ```bash
+   pnpm type-check
+   pnpm lint
+   pnpm test
+   pnpm build
+   ```
+
+### Railway Deployment Fails
 
 1. Check Railway logs in dashboard
 2. Verify build command runs locally: `pnpm build`
 3. Check environment variables are set correctly
 4. Ensure branch is correctly configured in Railway settings
+5. Verify Railway token has correct permissions
 
 ### Health Check Fails
 
