@@ -256,7 +256,7 @@ For both services, under **Settings** → **Deploy**:
 6. Test at staging URL: `https://jive-staging.up.railway.app`
 7. Verify health check: `https://jive-staging.up.railway.app/api/health`
 
-**Workflow visibility:** `https://github.com/[your-org]/[repo]/actions`
+**Workflow visibility:** View deployment status in your repository's Actions tab
 
 ### Promoting to Production
 
