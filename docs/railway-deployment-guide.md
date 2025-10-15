@@ -10,6 +10,28 @@ JIVE uses a three-tier deployment strategy:
 - **Staging Environment** - `staging` branch deployed to Railway
 - **Production Environment** - `main` branch deployed to Railway
 
+## Recommended Deployment Strategy
+
+**Auto-Staging, Manual Production** - The safest and most efficient approach:
+
+- **JIVE-Staging**: Auto-deploy **ENABLED** ✅
+  - Instant feedback when you merge to staging
+  - Test immediately without manual intervention
+  - Fast iteration cycle
+
+- **JIVE-Production**: Auto-deploy **DISABLED** ❌
+  - Deploy only when YOU decide
+  - Control production release timing
+  - Prevents accidental deployments
+  - Manual "Deploy Now" button in Railway dashboard
+
+**Why This Works:**
+
+1. Merge to staging → Instantly deployed → Test immediately
+2. When satisfied → Merge staging to main
+3. Go to Railway Production → Click "Deploy Now" when ready
+4. Production updates on YOUR schedule
+
 ## Prerequisites
 
 - Railway account ([railway.app](https://railway.app/))
@@ -30,10 +52,12 @@ JIVE uses a three-tier deployment strategy:
 2. Go to **Settings** tab
 3. Under **Deploy** section:
    - Set **Source Branch** to `main`
-   - Enable **Auto-Deploy** on push
+   - **DISABLE Auto-Deploy** ❌ (Recommended for production control)
 4. Under **Domains** section:
    - Click "Generate Domain" or add custom domain
    - Note the URL (e.g., `jive-production.up.railway.app`)
+
+**Note:** With auto-deploy disabled, you'll manually click "Deploy Now" in Railway dashboard after merging to `main`. This gives you full control over production deployments.
 
 ### Production Environment Variables
 
@@ -166,9 +190,20 @@ For both services, under **Settings** → **Deploy**:
 1. Create PR from `staging` to `main`
 2. Review all staging changes
 3. Get approval and merge
-4. Railway auto-deploys to production
+4. **Manually deploy to production:**
+   - Go to Railway Dashboard → JIVE-Production service
+   - Click **Deployments** tab
+   - Click **"Deploy Now"** button
+   - Wait for deployment to complete
 5. Verify at production URL: `https://jive-production.up.railway.app`
 6. Monitor health check and logs
+
+**Why Manual Production Deploy?**
+
+- Deploy on YOUR schedule (off-hours, after team readiness, etc.)
+- Final sanity check before going live
+- Prevents accidental production deployments
+- Control over rollout timing
 
 ## Monitoring Deployments
 
