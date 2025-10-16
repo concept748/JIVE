@@ -5,7 +5,13 @@
 
 import Redis from 'ioredis';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+// Construct Redis URL from environment variables
+// Support both REDIS_URL and individual components (REDIS_HOST, REDIS_PORT, REDIS_PASSWORD)
+const redisUrl =
+  process.env.REDIS_URL ||
+  (process.env.REDIS_HOST
+    ? `redis://${process.env.REDIS_PASSWORD ? `default:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`
+    : 'redis://localhost:6379');
 
 // Create singleton Redis client
 export const redis = new Redis(redisUrl, {
