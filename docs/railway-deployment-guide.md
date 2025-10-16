@@ -12,25 +12,35 @@ JIVE uses a three-tier deployment strategy:
 
 ## Recommended Deployment Strategy
 
-**Auto-Staging, Manual Production** - The safest and most efficient approach:
+**GitHub Actions Test-Gated with Railway Auto-Deploy** - The safest and most reliable approach:
 
 - **JIVE-Staging**: Auto-deploy **ENABLED** ✅
-  - Instant feedback when you merge to staging
-  - Test immediately without manual intervention
+  - Railway auto-deploys on push to staging
+  - GitHub Actions runs tests on every push
+  - Test visibility in GitHub Actions tab
   - Fast iteration cycle
 
 - **JIVE-Production**: Auto-deploy **DISABLED** ❌
+  - Manual deployment control
   - Deploy only when YOU decide
   - Control production release timing
-  - Prevents accidental deployments
   - Manual "Deploy Now" button in Railway dashboard
 
 **Why This Works:**
 
-1. Merge to staging → Instantly deployed → Test immediately
-2. When satisfied → Merge staging to main
-3. Go to Railway Production → Click "Deploy Now" when ready
-4. Production updates on YOUR schedule
+1. Push to staging → GitHub Actions runs tests in parallel
+2. Railway auto-deploys to staging
+3. Test results visible in GitHub Actions
+4. When satisfied → Merge staging to main
+5. Go to Railway Production → Click "Deploy Now" when ready
+6. Production updates on YOUR schedule
+
+**Benefits:**
+
+- ✅ Test visibility in GitHub Actions
+- ✅ Fast staging deployments via Railway
+- ✅ Consistent CI/CD pipeline
+- ✅ Better deployment audit trail
 
 ## Prerequisites
 
@@ -96,7 +106,7 @@ GITHUB_OAUTH_CLIENT_SECRET=[production-oauth-client-secret]
 1. Go to **Settings** tab
 2. Under **Deploy** section:
    - Set **Source Branch** to `staging`
-   - Enable **Auto-Deploy** on push
+   - **ENABLE Auto-Deploy** ✅ (Railway will auto-deploy on push)
 3. Under **Domains** section:
    - Click "Generate Domain"
    - Note the URL (e.g., `jive-staging.up.railway.app`)
@@ -146,7 +156,27 @@ If using Railway-managed databases:
 
 Repeat for Redis if needed.
 
-## Step 5: Configure Health Checks
+## Step 5: Verify GitHub Actions Test Workflow
+
+The `.github/workflows/deploy-staging.yml` workflow runs tests on every push to staging:
+
+1. **Run on push to staging branch**
+2. **Execute all tests:**
+   - Type checking (`pnpm type-check`)
+   - Linting (`pnpm lint`)
+   - Unit tests (`pnpm test`)
+   - Build verification (`pnpm build`)
+
+**Workflow file location:** `.github/workflows/deploy-staging.yml`
+
+**Key features:**
+
+- ✅ Test visibility: Full test results in GitHub Actions tab
+- ✅ Automatic: Triggered on push to staging branch
+- ✅ Parallel with Railway: Tests run while Railway deploys
+- ✅ Auditable: Complete test history in GitHub
+
+## Step 6: Configure Health Checks
 
 For both services:
 
@@ -156,34 +186,44 @@ For both services:
 4. Set **Health Check Timeout** to 10 seconds
 5. Set **Health Check Interval** to 30 seconds
 
-## Step 6: Configure Deployment Settings
+## Step 7: Configure Deployment Settings
 
 For both services, under **Settings** → **Deploy**:
 
 1. **Build Command**: `pnpm build` (auto-detected)
 2. **Start Command**: `pnpm start` (auto-detected)
 3. **Watch Paths**: Leave default or customize
-4. **Auto-Deploy**: Enabled
+4. **Auto-Deploy**: **ENABLED** for staging ✅, **DISABLED** for production ❌
 5. **Restart Policy**: ON_FAILURE with 3 max retries
 
 ## Deployment Workflow
 
-### Deploying to Staging
+### Deploying to Staging (Test-Gated via GitHub Actions)
 
-1. Merge feature branch PR to `staging`:
+1. Create and push feature branch:
 
    ```bash
-   # Feature branch
+   # Create feature branch from staging
    git checkout -b feature/my-feature staging
-   # ... make changes ...
+   # Make changes
+   git add .
+   git commit -m "Add new feature"
    git push origin feature/my-feature
-   # Create PR to staging branch
    ```
 
-2. Once PR is merged, Railway auto-deploys to staging
-3. Monitor deployment in Railway dashboard
-4. Test at staging URL: `https://jive-staging.up.railway.app`
-5. Verify health check: `https://jive-staging.up.railway.app/api/health`
+2. Create PR to `staging` branch on GitHub
+3. Review changes and merge PR
+4. **Automatic deployment:**
+   - Railway auto-deploys to staging
+   - GitHub Actions runs all tests in parallel
+   - View test results in GitHub Actions tab
+5. Monitor deployment:
+   - **GitHub Actions**: View test results
+   - **Railway Dashboard**: View deployment status and application logs
+6. Test at staging URL: `https://jive-staging.up.railway.app`
+7. Verify health check: `https://jive-staging.up.railway.app/api/health`
+
+**Workflow visibility:** View deployment status in your repository's Actions tab
 
 ### Promoting to Production
 
@@ -216,12 +256,18 @@ For both services, under **Settings** → **Deploy**:
 
 ### GitHub Actions
 
-CI runs on both `staging` and `main` branches:
+**CI Workflow** (`.github/workflows/ci.yml`) runs on all branches:
 
 - Linting and formatting
 - Type checking
 - Unit tests
 - Build verification
+
+**Staging Tests Workflow** (`.github/workflows/deploy-staging.yml`) runs on staging branch:
+
+- All CI checks above (type-check, lint, test, build)
+- Runs in parallel with Railway auto-deploy
+- Full test history in GitHub Actions
 
 ### Health Check Monitoring
 
@@ -264,12 +310,32 @@ If production deployment fails:
 
 ## Troubleshooting
 
-### Deployment Fails
+### GitHub Actions Deployment Fails
+
+1. **Check GitHub Actions logs:**
+   - Go to repository → Actions tab
+   - Click on failed workflow run
+   - Review test output and deployment logs
+
+2. **Common issues:**
+   - **Tests failing**: Fix failing tests to pass CI checks
+   - **Build errors**: Verify build works locally
+
+3. **Verify locally:**
+   ```bash
+   pnpm type-check
+   pnpm lint
+   pnpm test
+   pnpm build
+   ```
+
+### Railway Deployment Fails
 
 1. Check Railway logs in dashboard
 2. Verify build command runs locally: `pnpm build`
 3. Check environment variables are set correctly
 4. Ensure branch is correctly configured in Railway settings
+5. Verify Railway token has correct permissions
 
 ### Health Check Fails
 
