@@ -10,8 +10,13 @@ const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 // Create singleton Redis client
 export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 3,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
   enableReadyCheck: true,
-  lazyConnect: false,
+  lazyConnect: true, // Don't connect immediately - wait for first command
+  connectTimeout: 10000, // 10 second timeout
 });
 
 // Handle connection errors
