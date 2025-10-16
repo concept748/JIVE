@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GET } from './route';
 
+// Mock the database and Redis connection test functions
+vi.mock('@/lib/db/prisma', () => ({
+  testConnection: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/lib/db/redis', () => ({
+  testConnection: vi.fn().mockResolvedValue(true),
+}));
+
 describe('Health API Endpoint', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -43,5 +52,21 @@ describe('Health API Endpoint', () => {
 
     expect(data.timestamp).toBe('2025-10-15T14:30:00.000Z');
     expect(() => new Date(data.timestamp)).not.toThrow();
+  });
+
+  it('includes database health status', async () => {
+    const response = await GET();
+    const data = await response.json();
+
+    expect(data).toHaveProperty('database');
+    expect(data.database).toBe(true);
+  });
+
+  it('includes Redis health status', async () => {
+    const response = await GET();
+    const data = await response.json();
+
+    expect(data).toHaveProperty('redis');
+    expect(data.redis).toBe(true);
   });
 });

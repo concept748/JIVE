@@ -1,0 +1,114 @@
+// Prisma Schema for JIVE
+// Aligned with Architecture v1.1 (docs/architecture.md lines 1222-1451)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+
+enum ArtifactType {
+  PRD
+  ARCHITECTURE
+  STORY
+  QA
+  OTHER
+}
+
+enum WebhookSource {
+  GITHUB
+  GITLAB
+  BITBUCKET
+}
+
+enum MCPResult {
+  SUCCESS
+  FAILURE
+  UNAUTHORIZED
+  RATE_LIMITED
+}
+
+// Models
+
+model Project {
+  id            String   @id @default(uuid())
+  name          String
+  repoUrl       String   @unique
+  webhookSecret String   @db.Text
+  config        Json     // ProjectConfig as JSONB
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastSeen      DateTime @default(now())
+
+  artifacts     Artifact[]
+  webhookEvents WebhookEvent[]
+  mcpAuditLogs  MCPAuditLog[]
+
+  @@index([repoUrl])
+}
+
+model Artifact {
+  id           String       @id @default(uuid())
+  projectId    String
+  path         String
+  name         String
+  type         ArtifactType
+  version      String?
+  createdBy    String?
+  createdAt    DateTime?
+  updatedAt    DateTime     @updatedAt
+  dependencies Json         // Array of {path, version}
+  content      String?      @db.Text
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path])
+  @@index([projectId, type])
+  @@index([projectId, updatedAt])
+}
+
+model WebhookEvent {
+  id           String        @id
+  source       WebhookSource
+  projectId    String
+  eventType    String
+  payloadHash  String
+  processed    Boolean       @default(false)
+  processedAt  DateTime?
+  retryCount   Int           @default(0)
+  errorMessage String?       @db.Text
+  receivedAt   DateTime      @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([id, source])
+  @@index([projectId, processed])
+  @@index([payloadHash])
+}
+
+model MCPAuditLog {
+  id           String    @id @default(uuid())
+  projectId    String
+  actorType    String    // 'user' | 'service_account'
+  actorId      String
+  actorName    String
+  tool         String
+  scope        String
+  argsHash     String    // SHA-256
+  result       MCPResult
+  errorMessage String?   @db.Text
+  timestamp    DateTime  @default(now())
+  ipAddress    String
+  userAgent    String    @db.Text
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, timestamp])
+  @@index([actorId, timestamp])
+  @@index([tool, timestamp])
+}
