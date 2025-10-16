@@ -1,11 +1,11 @@
-name: Deploy to Staging
+name: Staging Tests
 
 on:
   push:
     branches: [staging]
 
 jobs:
-  test-and-deploy:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,13 +37,3 @@ jobs:
 
       - name: Build application
         run: pnpm build
-
-      - name: Install Railway CLI
-        if: success()
-        run: npm install -g @railway/cli
-
-      - name: Deploy to Railway Staging
-        if: success()
-        run: railway up --service jive-staging
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
