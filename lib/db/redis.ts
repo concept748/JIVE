@@ -23,6 +23,7 @@ export const redis = new Redis(redisUrl, {
   enableReadyCheck: true,
   lazyConnect: true, // Don't connect immediately - wait for first command
   connectTimeout: 10000, // 10 second timeout
+  family: 0, // Enable dual-stack (IPv4 + IPv6) DNS lookup for Railway compatibility
 });
 
 // Handle connection errors
@@ -64,7 +65,9 @@ export async function subscribeToChannel(
   handler: (message: string, parsedData: unknown) => void,
 ): Promise<Redis> {
   // Create a new Redis client for subscription (required by Redis pub/sub)
-  const subscriber = new Redis(redisUrl);
+  const subscriber = new Redis(redisUrl, {
+    family: 0, // Enable dual-stack DNS lookup for Railway IPv6 compatibility
+  });
 
   subscriber.on('message', (ch, message) => {
     if (ch === channel) {
