@@ -84,7 +84,13 @@ export async function subscribeToChannel(
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const response = await redis.ping();
+    // Add 5 second timeout to ping command
+    const response = await Promise.race([
+      redis.ping(),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('Redis ping timeout')), 5000),
+      ),
+    ]);
     return response === 'PONG';
   } catch (error) {
     console.error('Redis connection test failed:', error);
