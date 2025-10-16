@@ -75,11 +75,17 @@ export function validateProjectConfig(
 }
 
 /**
- * Extract project name from project path
+ * Extract project name from project path (cross-platform)
+ * Handles both Windows (C:\Users\...) and POSIX (/home/...) paths
  * @param projectPath - Full path to project directory
  * @returns Sanitized project name (basename of directory)
  */
 export function extractProjectName(projectPath: string): string {
+  // Handle Windows paths (with backslashes) on any platform
+  if (projectPath.includes('\\')) {
+    return path.win32.basename(projectPath);
+  }
+  // Default to platform-specific parsing for forward slashes
   return path.basename(projectPath);
 }
 
