@@ -84,16 +84,26 @@ export async function subscribeToChannel(
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    // Add 5 second timeout to ping command
+    console.log(
+      'Testing Redis connection with URL:',
+      redisUrl.replace(/:[^:@]+@/, ':****@'),
+    );
+
+    // Add 10 second timeout to allow for connection + ping
     const response = await Promise.race([
       redis.ping(),
       new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error('Redis ping timeout')), 5000),
+        setTimeout(() => reject(new Error('Redis ping timeout')), 10000),
       ),
     ]);
+
+    console.log('Redis ping response:', response);
     return response === 'PONG';
   } catch (error) {
     console.error('Redis connection test failed:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
     return false;
   }
 }
