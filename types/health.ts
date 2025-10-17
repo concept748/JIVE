@@ -4,4 +4,14 @@ export interface HealthResponse {
   timestamp: string;
   database?: boolean;
   redis?: boolean;
+  environments?: {
+    staging?: {
+      postgres?: boolean;
+      redis?: boolean;
+    };
+    production?: {
+      postgres?: boolean;
+      redis?: boolean;
+    };
+  };
 }

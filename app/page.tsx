@@ -74,6 +74,84 @@ export default function Home() {
                   {new Date(healthData.timestamp).toLocaleString()}
                 </span>
               </div>
+
+              {healthData.environments && (
+                <>
+                  <div className="my-4 border-t pt-4">
+                    <h3 className="mb-3 text-sm font-semibold">
+                      Environment Health Checks
+                    </h3>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Staging - Postgres
+                        </span>
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            healthData.environments.staging?.postgres
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                        >
+                          {healthData.environments.staging?.postgres
+                            ? '✓'
+                            : '✗'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Staging - Redis
+                        </span>
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            healthData.environments.staging?.redis
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                        >
+                          {healthData.environments.staging?.redis ? '✓' : '✗'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Production - Postgres
+                        </span>
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            healthData.environments.production?.postgres
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                        >
+                          {healthData.environments.production?.postgres
+                            ? '✓'
+                            : '✗'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Production - Redis
+                        </span>
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            healthData.environments.production?.redis
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                        >
+                          {healthData.environments.production?.redis
+                            ? '✓'
+                            : '✗'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
