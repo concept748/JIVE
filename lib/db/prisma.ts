@@ -19,10 +19,17 @@ if (process.env.NODE_ENV !== 'production') {
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    console.log('Testing database connection...');
+    const result = await prisma.$queryRaw<
+      Array<{ result: number }>
+    >`SELECT 1 as result`;
+    console.log('Database connection successful:', result);
     return true;
   } catch (error) {
     console.error('Database connection test failed:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
     return false;
   }
 }

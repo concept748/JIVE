@@ -5,13 +5,25 @@
 
 import Redis from 'ioredis';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+// Construct Redis URL from environment variables
+// Support both REDIS_URL and individual components (REDIS_HOST, REDIS_PORT, REDIS_PASSWORD)
+const redisUrl =
+  process.env.REDIS_URL ||
+  (process.env.REDIS_HOST
+    ? `redis://${process.env.REDIS_PASSWORD ? `default:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`
+    : 'redis://localhost:6379');
 
 // Create singleton Redis client
 export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 3,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
   enableReadyCheck: true,
-  lazyConnect: false,
+  lazyConnect: true, // Don't connect immediately - wait for first command
+  connectTimeout: 10000, // 10 second timeout
+  family: 0, // Enable dual-stack (IPv4 + IPv6) DNS lookup for Railway compatibility
 });
 
 // Handle connection errors
@@ -53,7 +65,9 @@ export async function subscribeToChannel(
   handler: (message: string, parsedData: unknown) => void,
 ): Promise<Redis> {
   // Create a new Redis client for subscription (required by Redis pub/sub)
-  const subscriber = new Redis(redisUrl);
+  const subscriber = new Redis(redisUrl, {
+    family: 0, // Enable dual-stack DNS lookup for Railway IPv6 compatibility
+  });
 
   subscriber.on('message', (ch, message) => {
     if (ch === channel) {
@@ -79,10 +93,26 @@ export async function subscribeToChannel(
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const response = await redis.ping();
+    console.log(
+      'Testing Redis connection with URL:',
+      redisUrl.replace(/:[^:@]+@/, ':****@'),
+    );
+
+    // Add 10 second timeout to allow for connection + ping
+    const response = await Promise.race([
+      redis.ping(),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('Redis ping timeout')), 10000),
+      ),
+    ]);
+
+    console.log('Redis ping response:', response);
     return response === 'PONG';
   } catch (error) {
     console.error('Redis connection test failed:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
     return false;
   }
 }
