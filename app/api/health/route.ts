@@ -26,24 +26,42 @@ async function checkEnvironment(url: string): Promise<{
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   // Test local database connection
   const databaseHealthy = await testDatabaseConnection();
 
   // Test local Redis connection
   const redisHealthy = await testRedisConnection();
 
-  // Check staging and production environments
-  const [staging, production] = await Promise.all([
-    checkEnvironment(
-      process.env.NEXT_PUBLIC_STAGING_URL ||
-        'https://jive-staging.up.railway.app/api/health',
-    ),
-    checkEnvironment(
-      process.env.NEXT_PUBLIC_PRODUCTION_URL ||
-        'https://jive-production.up.railway.app/api/health',
-    ),
-  ]);
+  // Check if this is a recursive call (skip environment checks to prevent infinite loop)
+  const url = new URL(request.url);
+  const skipEnvChecks = url.searchParams.get('local') === 'true';
+
+  let environments:
+    | {
+        staging: { postgres: boolean; redis: boolean };
+        production: { postgres: boolean; redis: boolean };
+      }
+    | undefined;
+
+  if (!skipEnvChecks) {
+    // Check staging and production environments (add ?local=true to prevent recursion)
+    const [staging, production] = await Promise.all([
+      checkEnvironment(
+        (process.env.NEXT_PUBLIC_STAGING_URL ||
+          'https://jive-staging.up.railway.app') + '/api/health?local=true',
+      ),
+      checkEnvironment(
+        (process.env.NEXT_PUBLIC_PRODUCTION_URL ||
+          'https://jive-production.up.railway.app') + '/api/health?local=true',
+      ),
+    ]);
+
+    environments = {
+      staging,
+      production,
+    };
+  }
 
   const response: HealthResponse = {
     status: 'ok',
@@ -51,10 +69,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     database: databaseHealthy,
     redis: redisHealthy,
-    environments: {
-      staging,
-      production,
-    },
+    environments,
   };
 
   return NextResponse.json(response);

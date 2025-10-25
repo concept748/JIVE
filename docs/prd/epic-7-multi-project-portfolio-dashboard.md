@@ -1,16 +1,18 @@
-# Epic 2: Multi-Project Portfolio Dashboard
+# Epic 7: Multi-Project Portfolio Dashboard
 
 **Goal:** Build portfolio management interface allowing users to add, view, and navigate between multiple BMAD projects from a unified dashboard.
 
 **Business Value:** Enables the core value proposition of multi-project visibility. Transforms JIVE from single-project monitor to portfolio intelligence platform, directly addressing the "manage multiple projects efficiently" goal from the PRD.
 
-**Target Completion:** Week 2-3 (Sprint 2-3 of 6-week timeline)
+**Target Completion:** Week 5-6 (Sprint 5-6 of 6-week timeline)
+
+**Note:** Originally Epic 2, renumbered to Epic 7 to separate frontend portfolio features from backend infrastructure (Epic 2: Infrastructure & MCP Server)
 
 ---
 
 ## User Stories
 
-**Story 2.1: Portfolio Data Model & Persistence**
+**Story 7.1: Portfolio Data Model & Persistence**
 
 ```
 As a System
@@ -26,7 +28,7 @@ Acceptance Criteria:
 ✓ Unit tests for ProjectStore (add, remove, list, concurrent access)
 ```
 
-**Story 2.2: Add Project Flow (UI)**
+**Story 7.2: Add Project Flow (UI)**
 
 ```
 As a User
@@ -43,7 +45,7 @@ Acceptance Criteria:
 ✓ Duplicate prevention: cannot add same path twice (shows error)
 ```
 
-**Story 2.3: Portfolio Grid View**
+**Story 7.3: Portfolio Grid View**
 
 ```
 As a User
@@ -63,7 +65,7 @@ Acceptance Criteria:
 ✓ Cards have hover effect (slight elevation, cursor pointer)
 ```
 
-**Story 2.4: Navigate to Project Detail**
+**Story 7.4: Navigate to Project Detail**
 
 ```
 As a User
@@ -79,7 +81,7 @@ Acceptance Criteria:
 ✓ 404 page if projectId invalid or project not found
 ```
 
-**Story 2.5: Remove Project**
+**Story 7.5: Remove Project**
 
 ```
 As a User
@@ -95,7 +97,7 @@ Acceptance Criteria:
 ✓ Cannot remove last project (must have at least one - or allow empty state)
 ```
 
-**Story 2.6: Portfolio Metadata & Statistics**
+**Story 7.6: Portfolio Metadata & Statistics**
 
 ```
 As a System

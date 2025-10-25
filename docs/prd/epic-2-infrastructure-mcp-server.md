@@ -10,6 +10,8 @@
 
 ## User Stories
 
+**Note on Story Splits (2025-10-25):** Stories 2.3 and 2.4 have been split into sub-stories (2.3a/2.3b and 2.4a/2.4b) to reduce complexity and enable clearer development workflow. See `docs/stories/STORY-SPLITS-EPIC-2.md` for detailed split rationale.
+
 **Story 2.1: Database & Redis Setup**
 
 ```
@@ -46,45 +48,76 @@ Acceptance Criteria:
 ✓ Basic middleware: logging, error handling, request ID
 ```
 
-**Story 2.3: MCP Authentication & Authorization**
+**Story 2.3a: MCP JWT Authentication**
 
 ```
 As a Security Engineer
-I want MCP tool invocations authenticated and authorized via JWT with scopes
-So that only authorized IDE agents can access JIVE data
+I want MCP tool invocations authenticated via JWT with scope-based authorization
+So that only authorized IDE agents can access JIVE data with appropriate permissions
 
 Acceptance Criteria:
 ✓ JWT verification middleware created (verifies signature, expiry, issuer)
-✓ Scope-based RBAC implemented (mcp:status.read, mcp:conflicts.read, mcp:kanban.write, etc.)
-✓ Rate limiting via Redis token bucket (60 requests/minute per client)
-✓ Audit logging to mcp_audit_logs table (actor, tool, scope, result, timestamp)
+✓ Scope-based authorization implemented (requireScope() function)
 ✓ Unauthorized requests return 401 with error details
-✓ Rate-limited requests return 429 with retry-after header
+✓ Insufficient scope returns 403 with required scope in error message
 ✓ Unit tests for auth middleware (valid/invalid tokens, expired tokens, scope checks)
 ✓ Integration test: MCP tool call with valid JWT succeeds, invalid JWT fails
+✓ All tests pass
 ```
 
-**Story 2.4: MCP Tool Registry & Phase 1 Tools**
+**Story 2.3b: MCP Rate Limiting & Audit Logging**
+
+```
+As a System Administrator
+I want MCP tool invocations rate-limited and audited
+So that I can prevent abuse and track all access to JIVE data
+
+Acceptance Criteria (depends on Story 2.3a):
+✓ Rate limiting via Redis token bucket (60 requests/minute per client)
+✓ Audit logging to mcp_audit_logs table (actor, tool, scope, result, timestamp)
+✓ Rate-limited requests return 429 with Retry-After header
+✓ Audit logs capture all tool invocations (success and failure)
+✓ Redis failure fails open (allows request if Redis unavailable)
+✓ Unit tests for rate limiter and audit logger
+✓ Integration test: MCP tool call creates audit log entry
+✓ All tests pass
+```
+
+**Story 2.4a: MCP Tool Registry + Core Read Tools**
 
 ```
 As an IDE Agent (Cursor/Codex)
 I want to discover and invoke JIVE tools via Model Context Protocol
-So that I can query project status and manage tasks from my IDE
+So that I can query project status from my IDE
 
 Acceptance Criteria:
-✓ Tool discovery endpoint GET /mcp/tools returns tool schemas (OpenAPI-like)
-✓ Tool invocation endpoint POST /mcp/invoke dispatches to registered tool handlers
-✓ Tool registry pattern implemented (decorator or registry class)
-✓ Phase 1 tools implemented (5 tools):
-  - status.get(project_id) → Returns agent statuses
-  - conflicts.list(project_id) → Returns active conflicts
-  - kanban.moveStory(project_id, story_id, lane) → Updates story status
-  - gates.list(project_id) → Returns quality gate statuses
-  - runs.list(project_id, filters) → Returns agent execution runs
-✓ Each tool queries Prisma for data (no hardcoded responses)
-✓ Each tool logs to mcp_audit_logs table
-✓ Integration tests for all 5 tools with mocked Prisma data
-✓ Postman/curl examples documented for manual testing
+✓ Tool discovery endpoint GET /mcp/tools returns tool schemas
+✓ Tool invocation endpoint POST /mcp/invoke dispatches to handlers
+✓ Tool registry pattern implemented (ToolRegistry class)
+✓ 2 tools implemented: status.get, conflicts.list
+✓ Each tool queries Prisma for data (placeholder data for now)
+✓ Each tool logs to mcp_audit_logs via audit logger
+✓ Integration tests for registry and 2 tools
+✓ All tests pass
+```
+
+**Story 2.4b: MCP Remaining Phase 1 Tools**
+
+```
+As an IDE Agent (Cursor/Codex)
+I want to invoke additional JIVE tools for task management and quality gates
+So that I can manage stories and view gate status from my IDE
+
+Acceptance Criteria (depends on Story 2.4a):
+✓ 3 tools implemented: kanban.moveStory, gates.list, runs.list
+✓ kanban.moveStory updates story markdown file status field (with path validation)
+✓ gates.list returns quality gate statuses (placeholder)
+✓ runs.list returns agent run history (placeholder)
+✓ Integration tests for all 3 tools
+✓ Postman collection documented for all 5 tools
+✓ curl examples documented for all 5 tools
+✓ All tests pass
+✓ Deployed to Railway
 ```
 
 **Story 2.5: Initialize Orchestrator Worker**
@@ -306,9 +339,20 @@ jive/
 
 ---
 
-**Effort Estimate:** 6-8 days (1 developer, AI-assisted)
+**Effort Estimate:** 7-9 days (1 developer, AI-assisted)
+
+- Story 2.1: 1.5 days
+- Story 2.2: 0.75 days
+- Story 2.3a: 1 day
+- Story 2.3b: 1 day
+- Story 2.4a: 1.5 days
+- Story 2.4b: 1 day
+- Story 2.5: 2 days
+
 **Priority:** P0 (Critical Path - blocks Epic 3+)
 **Assigned To:** TBD
+
+**Story Count:** 7 stories (split from original 5)
 
 ---
 
@@ -339,6 +383,10 @@ This epic addresses the "Production-Ready MCP Server" gap identified in Architec
 **Relationship to Epic 1:**
 
 Epic 2 runs in parallel with completing Epic 1 stories. While Epic 1 focuses on web service features (health check, project detection), Epic 2 builds out the multi-service architecture required for the full JIVE vision.
+
+**Epic Scope Change (2025-10-25):**
+
+This epic was separated from the original "Multi-Project Portfolio Dashboard" PRD. Frontend portfolio features (project cards, add/remove UI, portfolio grid) moved to Epic 7. Epic 2 now focuses exclusively on backend infrastructure (database, MCP server, orchestrator) to enable clearer separation of concerns and parallel development tracks.
 
 **Phase 2 Enhancements (Deferred):**
 
